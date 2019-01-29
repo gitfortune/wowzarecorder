@@ -1,0 +1,6 @@
+
+recorder:
+  temp: E:/tmp  # 录制文件临时存储目录
+  storage: E:/audioMp3   # 录制文件存储目录
+  ffmpeg: E:/software/ffmpeg/bin/ffmpeg.exe      #ffmpeg路径
+  urlPrefix:  http://hnradio:123456@localhost:8086 #userName:passWord@ip:端口

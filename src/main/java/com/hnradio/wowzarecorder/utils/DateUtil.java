@@ -1,7 +1,10 @@
 package com.hnradio.wowzarecorder.utils;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.Period;
+import java.time.temporal.ChronoUnit;
 
 public class DateUtil {
 
@@ -31,6 +34,16 @@ public class DateUtil {
             return true;
         }
         return false;
+    }
+
+    /**
+     * 计算给定时间的时间间隔,单位 毫秒
+     */
+    public static long timeDiff(String startTime,String endTime){
+        LocalTime startParse = LocalTime.parse(startTime);
+        LocalTime endParse = LocalTime.parse(endTime);
+        return ChronoUnit.MILLIS.between(startParse, endParse);
+//        long seconds = Duration.between(startParse, endParse).getSeconds();
     }
 
 }
