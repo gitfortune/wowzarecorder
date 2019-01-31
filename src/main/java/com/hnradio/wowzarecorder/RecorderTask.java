@@ -3,8 +3,10 @@ package com.hnradio.wowzarecorder;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.hnradio.wowzarecorder.bean.ChannelBean;
+import com.hnradio.wowzarecorder.config.RecorderProperties;
 import com.hnradio.wowzarecorder.utils.OkHttpUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -23,11 +25,14 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RecorderTask {
 
+    @Autowired
+    RecorderProperties properties;
+
     List<ChannelBean> channelList;
 
     ScheduledExecutorService service;
 
-    @Scheduled(cron = "50 43 17 * * ?")
+    @Scheduled(cron = "50 52 10 * * ?")
     public void RecorderExecutor(){
         try {
             //获取节目单json数据
@@ -54,14 +59,14 @@ public class RecorderTask {
     public void startUp(){
 //        service.execute(new RecorderRunnable(channelList.get(37)));
         for(ChannelBean channel : channelList){
-            service.execute(new RecorderRunnable(channel));
+            service.execute(new RecorderRunnable(channel,properties));
         }
     }
 
     /**
      * 每天23：55开始关闭线程池
      */
-//    @Scheduled(cron = "50 43 17 * * ?")
+    @Scheduled(cron = "00 59 08 * * ?")
     public void shutDownThreadPool(){
         service.shutdown();
         try {
@@ -73,6 +78,7 @@ public class RecorderTask {
             log.error("等待终止线程超时，将关闭线程池：{}",e);
             service.shutdownNow();
         }
+        log.info("关闭线程池");
     }
 
     /**

@@ -28,4 +28,14 @@ public class RecorderProperties {
      * userName:passWord@ip:端口
      */
     public String urlPrefix;
+
+    /**
+     * 对通过Http接口控制录制任务做认证 的 用户名
+     */
+    public String userName;
+
+    /**
+     * 对通过Http接口控制录制任务做认证 的 密码
+     */
+    public String passWord;
 }

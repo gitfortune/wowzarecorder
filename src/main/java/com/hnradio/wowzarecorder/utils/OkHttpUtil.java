@@ -1,15 +1,43 @@
 package com.hnradio.wowzarecorder.utils;
 
+import com.burgstaller.okhttp.AuthenticationCacheInterceptor;
+import com.burgstaller.okhttp.CachingAuthenticatorDecorator;
+import com.burgstaller.okhttp.digest.CachingAuthenticator;
+import com.burgstaller.okhttp.digest.Credentials;
+import com.burgstaller.okhttp.digest.DigestAuthenticator;
 import okhttp3.*;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * okhttp工具类
  */
 public class OkHttpUtil {
+
+    /**
+     * okhttp的摘要认证 Digest authentication
+     */
+    public static int digest(String userName,String passWord,String url) throws IOException {
+
+        final DigestAuthenticator authenticator = new DigestAuthenticator(new Credentials(userName, passWord));
+
+        final Map<String, CachingAuthenticator> authCache = new ConcurrentHashMap<>();
+
+        final OkHttpClient client = new OkHttpClient.Builder()
+                .authenticator(new CachingAuthenticatorDecorator(authenticator, authCache))
+                .addInterceptor(new AuthenticationCacheInterceptor(authCache))
+                .build();
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+        Response response = client.newCall(request).execute();
+        return response.code();
+    }
+
     /**
      * 同步的Get请求
      *

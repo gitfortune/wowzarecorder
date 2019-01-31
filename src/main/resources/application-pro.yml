@@ -1,0 +1,10 @@
+
+#wowza录制，切片
+recorder:
+  temp: xxx  # 录制文件临时存储目录
+  # storage: /usr/local/WowzaStreamingEngine-4.7.0/content/radio  # 录制文件存储目录
+  ffmpeg: /opt/ffmpeg/ffmpeg      #ffmpeg路径
+  urlPrefix:  http://172.20.2.1:8086 #使用Http接口来录制直播流 的 ip:端口   http://www.ttstream.com/wowza/record#livestreamrecordhttpprovider
+  userName: zhenghao  #对通过Http接口控制录制任务做认证 的 用户名   http://www.ttstream.com/wowza/record#authentication
+  passWord: hndtib21  #对通过Http接口控制录制任务做认证 的 密码    http://www.ttstream.com/wowza/record#authentication
+  storage: E:/audioMp3

@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Period;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
 public class DateUtil {
@@ -44,6 +45,14 @@ public class DateUtil {
         LocalTime endParse = LocalTime.parse(endTime);
         return ChronoUnit.MILLIS.between(startParse, endParse);
 //        long seconds = Duration.between(startParse, endParse).getSeconds();
+    }
+
+    /**
+     * 根据pattern获得相应格式日期，如："20190230"
+     * @return
+     */
+    public static String getDate(String pattern){
+        return LocalDate.now().format(DateTimeFormatter.ofPattern(pattern));
     }
 
 }
