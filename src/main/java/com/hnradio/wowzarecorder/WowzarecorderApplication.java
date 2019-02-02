@@ -6,6 +6,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
+//@EnableDiscoveryClient
+//@EnableFeignClients(basePackages = {"com.hnradio.wowzarecorder.api"})
+//@EnableHystrix
 public class WowzarecorderApplication {
 
 	public static void main(String[] args) {

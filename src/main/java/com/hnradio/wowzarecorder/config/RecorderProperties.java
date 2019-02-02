@@ -38,4 +38,9 @@ public class RecorderProperties {
      * 对通过Http接口控制录制任务做认证 的 密码
      */
     public String passWord;
+
+    /**
+     * 保存节目单的路径
+     */
+    public String programGuides;
 }

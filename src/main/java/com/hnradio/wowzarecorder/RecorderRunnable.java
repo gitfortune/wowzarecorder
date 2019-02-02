@@ -3,9 +3,11 @@ package com.hnradio.wowzarecorder;
 import com.hnradio.wowzarecorder.bean.ChannelBean;
 import com.hnradio.wowzarecorder.bean.ProgramBean;
 import com.hnradio.wowzarecorder.config.RecorderProperties;
+import com.hnradio.wowzarecorder.service.CallBackService;
 import com.hnradio.wowzarecorder.utils.DateUtil;
 import com.hnradio.wowzarecorder.utils.OkHttpUtil;
 import lombok.extern.slf4j.Slf4j;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,28 +25,32 @@ import java.util.concurrent.*;
 @Slf4j
 public class RecorderRunnable implements Runnable {
 
-    RecorderProperties properties;
+    private CallBackService callBackService;
 
-
-    /*public static RecorderRunnable recorderRunnable;
-
-
-    @PostConstruct
-    public void init(){
-        recorderRunnable = this;
-        recorderRunnable.properties = this.properties;
-    }*/
+    private RecorderProperties properties;
 
     private String streamName;
 
     private ChannelBean channel;
 
-    int i = 1;
+    private String userName;
 
-    public RecorderRunnable(ChannelBean channel, RecorderProperties properties) {
+    private String passWord;
+
+    //url前缀
+    private String urlPrefix;
+
+    //存储目录
+    private String directory;
+
+    RecorderRunnable(ChannelBean channel, RecorderProperties properties, CallBackService callBackService) {
         this.streamName = channel.getStreamName();
         this.channel = channel;
         this.properties = properties;
+        this.userName = properties.getUserName();
+        this.passWord = properties.getPassWord();
+        this.urlPrefix = properties.getUrlPrefix();
+        this.callBackService = callBackService;
     }
 
     @Override
@@ -54,12 +60,37 @@ public class RecorderRunnable implements Runnable {
         //获取此频率下所有节目
         List<ProgramBean> programs = channel.getPrograms();
         ExecutorService executorService = Executors.newSingleThreadExecutor();
+        //创建当天目录
+        directory = createDirectories();
+
+        String time = programs.get(0).getStarttime();
+        //每天第一个节目，判断开始时间是否是00：00，如果不是，计算它的开始时间距离0点有多少毫秒，线程开始休眠，等节目开始再执行下一步
+        if(!"00:00".equals(time)){
+            try {
+                Thread.sleep(DateUtil.timeDiff("00:00", time));
+            } catch (InterruptedException e) {
+                log.error("等待节目开始的线程休眠被中断：{}",e);
+            }
+        }
+
+        //循环当前频率下的节目，按照顺序进行录制
         for(ProgramBean program : programs){
+            //如果这个节目不需要录制
             if(!program.isWillSplit()){
+                //不管之前有没有在录制，先发出停止录制命令
+                this.stopRecording();
+                log.info(program.getName()+"不录制");
+                try {
+                    //根据这个节目时长休眠
+                    Thread.sleep(DateUtil.timeDiff(program.getStarttime(), program.getEndtime()));
+//                    Thread.sleep(15000);
+                } catch (InterruptedException e) {
+                    log.error("非录制节目休眠时线程被中断：{}",e);
+                }
                 continue;
             }
             if(flag){
-                //只对每天第一个节目生效
+                //只对每天第一个需要录制的节目生效
                 startRecording(program);
                 flag = false;
             }else {
@@ -69,82 +100,61 @@ public class RecorderRunnable implements Runnable {
             //计算该节目时长
             long timeDiff = DateUtil.timeDiff(program.getStarttime(), program.getEndtime());
             try {
-                //先休眠一个节目时长后
-                Thread.sleep(10000);
+                //休眠一个节目时长
+                Thread.sleep(timeDiff);
             } catch (InterruptedException e) {
-                log.error("根据节目时长休眠的线程出错：{}",e);
+                log.error("等待录制结束的线程休眠被中断：{}",e);
             }
-
         }
     }
 
     /**
-     * 每天第一次执行，直接执行startRecording
+     * 开始录制命令
      */
-    public void startRecording(ProgramBean program){
-        log.info("每天第一次执行，直接执行startRecording");
-        //先创建文件夹
-        String directory = createDirectories();
+    private void startRecording(ProgramBean program){
 
-        String userName = properties.getUserName();
-        String passWord = properties.getPassWord();
-        String urlPrefix = properties.getUrlPrefix();
-        String start = program.getStarttime().replace(":", "");
-        String end = program.getEndtime().replace(":", "");
-        String fileName = streamName+"_"+DateUtil.getDate("yyyyMMdd")+"_"+start+"_"+end;
-        String url = urlPrefix+"/livestreamrecord?app=live&streamname="+streamName+ i++ +"&action=startRecording&format=2&outputPath="+directory
+        String fileName = this.getFileName(program);
+        String url = urlPrefix+"/livestreamrecord?app=live&streamname="+streamName +"&action=startRecording&option=append&format=2&outputPath="+directory
                 + "&outputFile="+fileName+".mp4";
-        try {
-            OkHttpUtil.digest(userName,passWord,url);
-        } catch (IOException e) {
-            log.error("每天第一次执行录制命令出错：{}",e);
-        }
+        OkHttpUtil.digest(userName, passWord, url);
+        log.info("当前录制节目名称为：{}",fileName);
+    }
+
+    /**
+     * 停止录制命令
+     */
+    private void stopRecording(){
+        //停止命令
+        String stopCommand = urlPrefix+"/livestreamrecord?app=live&streamname="+streamName+"&action=stopRecording&format=2&option=append";
+        OkHttpUtil.digest(userName, passWord, stopCommand);
     }
 
     /**
      * 切片，分割直播流，向wowza发送先停止再开始的命令
      */
-    public void splitStream(ProgramBean program) {
+    private void splitStream(ProgramBean program) {
 
-        String userName = properties.getUserName();
-        String passWord = properties.getPassWord();
-        String urlPrefix = properties.getUrlPrefix();
-        String start = program.getStarttime().replace(":", "");
-        String end = program.getEndtime().replace(":", "");
-        String fileName = streamName+"_"+DateUtil.getDate("yyyyMMdd")+"_"+start+"_"+end;
-        String directory = createDirectories();
-        /*if(StringUtils.isBlank(directory)){
-            log.info("找不到存储目录");
-            return;
-        }*/
         //停止命令
-        String stopCommand = urlPrefix+"/livestreamrecord?app=live&streamname="+streamName+"&action=stopRecording&format=2";
+        this.stopRecording();
+
         //开始命令
-        String startCommand = urlPrefix+"/livestreamrecord?app=live&streamname="+streamName+"&action=startRecording&format=2&outputPath="+directory
-                + "&outputFile="+fileName+".mp4";
-        try {
-            //停止
-            OkHttpUtil.digest(userName,passWord,stopCommand);
-            //开始
-            OkHttpUtil.digest(userName,passWord,startCommand);
-        } catch (IOException e) {
-            log.error("向wowza发送切片命令出错：{}",e);
-        }
-        log.info(streamName+"向wowza发送先停止再开始命令");
-        //执行更改后缀命令
-//        changeSuffix(program,properties.getUrlPrefix()+uuid.toString());
+        this.startRecording(program);
+        log.info("执行切片命令");
+        //切片后，向节目单系统发送数据
+        callBackService.sendData(properties, channel.getStreamName(), program);
     }
 
     /**
      * 创建文件夹
      */
-    public String createDirectories(){
+    private String createDirectories(){
         String filePath = properties.getStorage()+"/"+streamName+"/"+DateUtil.getDate("yyyyMMdd");
         Path path = Paths.get(filePath);
         //如果文件目录不存在
         if(!Files.exists(path)){
             try {
                 Files.createDirectories(path);
+
             } catch (IOException e) {
                 log.error("文件夹创建失败",e);
             }
@@ -186,7 +196,7 @@ public class RecorderRunnable implements Runnable {
     /**
      * 获取存储路径和新文件名
      */
-    public String getStoragePath(ProgramBean program){
+    private String getStoragePath(ProgramBean program){
         String yyyyMMdd = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String name = program.getName();
         String startTime = program.getStarttime();
@@ -201,4 +211,12 @@ public class RecorderRunnable implements Runnable {
         return file.getPath()+"/"+fileName;
     }
 
+    /**
+     * 生成录制文件名称
+     */
+    private String getFileName(ProgramBean program){
+        String start = program.getStarttime().replace(":", "");
+        String end = program.getEndtime().replace(":", "");
+        return streamName+"_"+DateUtil.getDate("yyyyMMdd")+"_"+start+"_"+end;
+    }
 }

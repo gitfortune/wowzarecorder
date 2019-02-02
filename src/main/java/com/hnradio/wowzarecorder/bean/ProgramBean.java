@@ -14,7 +14,7 @@ public class ProgramBean implements Serializable {
 
     private long id;
 
-    private long channel_id;
+    private long channelId;
 
     private String name; //节目名称
 
@@ -26,10 +26,8 @@ public class ProgramBean implements Serializable {
 
     private String signa; //节目识别码
 
-    //临时存储 随机码
-    private transient String randomCode;
+    private String filePath;
 
-    //临时存储 回调地址
-    private transient String callbackUrl;
+
 
 }

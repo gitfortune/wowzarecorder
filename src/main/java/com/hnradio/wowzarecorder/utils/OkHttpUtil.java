@@ -5,6 +5,7 @@ import com.burgstaller.okhttp.CachingAuthenticatorDecorator;
 import com.burgstaller.okhttp.digest.CachingAuthenticator;
 import com.burgstaller.okhttp.digest.Credentials;
 import com.burgstaller.okhttp.digest.DigestAuthenticator;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 
 import java.io.IOException;
@@ -15,12 +16,13 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * okhttp工具类
  */
+@Slf4j
 public class OkHttpUtil {
 
     /**
      * okhttp的摘要认证 Digest authentication
      */
-    public static int digest(String userName,String passWord,String url) throws IOException {
+    public static Response digest(String userName,String passWord,String url) {
 
         final DigestAuthenticator authenticator = new DigestAuthenticator(new Credentials(userName, passWord));
 
@@ -34,8 +36,17 @@ public class OkHttpUtil {
                 .url(url)
                 .get()
                 .build();
-        Response response = client.newCall(request).execute();
-        return response.code();
+        Response response = null;
+        try {
+            response = client.newCall(request).execute();
+        } catch (IOException e) {
+            log.error("okHttp调用失败：{}",e);
+        }finally {
+            if(response != null) {
+                response.body().close();
+            }
+        }
+        return response;
     }
 
     /**
