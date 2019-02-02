@@ -56,17 +56,17 @@ public class RecorderRunnable implements Runnable {
     @Override
     public void run() {
         log.info("线程开始执行");
-        boolean flag = true;
         //获取此频率下所有节目
         List<ProgramBean> programs = channel.getPrograms();
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         //创建当天目录
         directory = createDirectories();
-
-        String time = programs.get(0).getStarttime();
-        //每天第一个节目，判断开始时间是否是00：00，如果不是，计算它的开始时间距离0点有多少毫秒，线程开始休眠，等节目开始再执行下一步
-        if(!"00:00".equals(time)){
+        ProgramBean bean = programs.get(0);
+        String time = bean.getStarttime();
+        //每天第一个节目，如果不是00：00开始，计算它的开始时间距离0点有多少毫秒，线程开始休眠，等节目开始再执行下一步
+        if(!"00:00".equals(time) && bean.isWillSplit()){
             try {
+                log.info(streamName+":"+"节目还没开始，等待录制,"+bean.getName());
                 Thread.sleep(DateUtil.timeDiff("00:00", time));
             } catch (InterruptedException e) {
                 log.error("等待节目开始的线程休眠被中断：{}",e);
@@ -79,24 +79,18 @@ public class RecorderRunnable implements Runnable {
             if(!program.isWillSplit()){
                 //不管之前有没有在录制，先发出停止录制命令
                 this.stopRecording();
-                log.info(program.getName()+"不录制");
+                log.info(streamName+":"+program.getName()+"不录制");
                 try {
                     //根据这个节目时长休眠
                     Thread.sleep(DateUtil.timeDiff(program.getStarttime(), program.getEndtime()));
-//                    Thread.sleep(15000);
+//                    Thread.sleep(30000);
                 } catch (InterruptedException e) {
                     log.error("非录制节目休眠时线程被中断：{}",e);
                 }
                 continue;
             }
-            if(flag){
-                //只对每天第一个需要录制的节目生效
-                startRecording(program);
-                flag = false;
-            }else {
-                //执行切片命令
-                executorService.execute(() -> splitStream(program));
-            }
+            //执行切片命令
+            executorService.execute(() -> splitStream(program));
             //计算该节目时长
             long timeDiff = DateUtil.timeDiff(program.getStarttime(), program.getEndtime());
             try {
@@ -105,6 +99,8 @@ public class RecorderRunnable implements Runnable {
             } catch (InterruptedException e) {
                 log.error("等待录制结束的线程休眠被中断：{}",e);
             }
+            //切片后（录制结束后），向节目单系统发送数据
+            callBackService.sendData(properties, channel.getStreamName(), program);
         }
     }
 
@@ -136,12 +132,9 @@ public class RecorderRunnable implements Runnable {
 
         //停止命令
         this.stopRecording();
-
         //开始命令
         this.startRecording(program);
-        log.info("执行切片命令");
-        //切片后，向节目单系统发送数据
-        callBackService.sendData(properties, channel.getStreamName(), program);
+        log.info("先暂停再开始录制新节目：{}",program.getName());
     }
 
     /**

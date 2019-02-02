@@ -47,7 +47,7 @@ public class RecorderTask {
     private ScheduledExecutorService service;
 
 //    @Scheduled(cron = "50 59 23 * * ?")
-    @Scheduled(cron = "00 27 09 * * ?")
+    @Scheduled(cron = "00 52 15 * * ?")
     public void RecorderExecutor(){
         try {
             //获取第二天的节目单json数据
@@ -84,7 +84,7 @@ public class RecorderTask {
      * 每天晚上定时关闭线程池
      */
     @Scheduled(cron = "56 57 23 * * ?")
-//    @Scheduled(cron = "00 56 17 * * ?")
+//    @Scheduled(cron = "00 35 15 * * ?")
     public void shutDownThreadPool(){
         String urlPrefix = properties.getUrlPrefix();
         String userName = properties.getUserName();
@@ -103,7 +103,7 @@ public class RecorderTask {
         }
         service.shutdown();
         try {
-            //等待x秒
+            //等待60秒
             if(!service.awaitTermination(60, TimeUnit.SECONDS)){
                 service.shutdownNow();
             }
