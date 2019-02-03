@@ -87,12 +87,12 @@ public class RecorderTask {
     @Scheduled(cron = "56 57 23 * * ?")
 //    @Scheduled(cron = "00 35 15 * * ?")
     public void shutDownThreadPool(){
-        String urlPrefix = properties.getUrlPrefix();
+        /*String urlPrefix = properties.getUrlPrefix();
         String userName = properties.getUserName();
-        String passWord = properties.getPassWord();
+        String passWord = properties.getPassWord();*/
         log.info("即将关闭线程池");
         //先发出停止录制命令
-        for(ChannelBean channel : channelList){
+        /*for(ChannelBean channel : channelList){
             String stopCommand = urlPrefix+"/livestreamrecord?app=live&streamname="+channel.getStreamName()+"&action=stopRecording&format=2&option=append";
             OkHttpUtil.digest(userName, passWord, stopCommand);
 
@@ -101,11 +101,11 @@ public class RecorderTask {
             //向节目单系统发送数据
             callBackService.sendData(properties,channel.getStreamName(),program);
             log.info("最后一次发停止命令"+program.getName());
-        }
+        }*/
         service.shutdown();
         try {
-            //等待60秒
-            if(!service.awaitTermination(60, TimeUnit.SECONDS)){
+            //等待5秒
+            if(!service.awaitTermination(5, TimeUnit.SECONDS)){
                 service.shutdownNow();
             }
         } catch (InterruptedException e) {

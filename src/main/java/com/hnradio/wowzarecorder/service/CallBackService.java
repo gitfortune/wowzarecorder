@@ -24,6 +24,7 @@ public class CallBackService {
         String fileName = streamName+"_"+DateUtil.getDate("yyyyMMdd")+"_"+start+"_"+end;
 
         program.setFilePath(filePath+"/"+fileName);
+        program.setCreateDate(DateUtil.getDate("yyyy-MM-dd"));
         String json = new Gson().toJson(program);
 
 //        log.info("数据已发出"+json);

@@ -28,6 +28,9 @@ public class ProgramBean implements Serializable {
 
     private String filePath;
 
+    //节目单需要的字段
+    private String createDate;
+
 
 
 }

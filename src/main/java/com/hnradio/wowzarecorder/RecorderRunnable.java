@@ -7,6 +7,7 @@ import com.hnradio.wowzarecorder.service.CallBackService;
 import com.hnradio.wowzarecorder.utils.DateUtil;
 import com.hnradio.wowzarecorder.utils.OkHttpUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,10 +15,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 /**
  * 单个频率的录制线程
@@ -47,6 +50,8 @@ public class RecorderRunnable implements Runnable {
      */
     private String directory;
 
+    private ScheduledThreadPoolExecutor executor;
+
     RecorderRunnable(ChannelBean channel, RecorderProperties properties, CallBackService callBackService) {
         this.streamName = channel.getStreamName();
         this.channel = channel;
@@ -62,11 +67,36 @@ public class RecorderRunnable implements Runnable {
         log.info("线程开始执行");
         //获取此频率下所有节目
         List<ProgramBean> programs = channel.getPrograms();
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-//        ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
+//        ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+        executor = new ScheduledThreadPoolExecutor(1);
         //创建当天目录
         directory = createDirectories();
-        ProgramBean bean = programs.get(0);
+        //找出需要录制的节目
+        List<ProgramBean> collect = programs.stream().filter(this::willSplit).collect(Collectors.toList());
+
+        for(ProgramBean programBean : collect){
+
+            //计算节目的开始时间距离0点有多少毫秒
+            long startDelay = DateUtil.timeDiff("00:00:00", programBean.getStarttime());
+            //设定需要执行的命令，设定延迟执行时间
+            executor.schedule(()->startRecording(programBean),startDelay,TimeUnit.MILLISECONDS);
+
+            //计算节目的结束时间距离0点有多少毫秒，然后提前一秒
+            LocalTime localTime = LocalTime.parse(programBean.getEndtime()).minusSeconds(1L);
+            long endDelay = DateUtil.timeDiff("00:00:00", localTime.toString());
+            //要提前一秒结束录制，避免和下一个开始时间冲突，有些时间是上个节目的结束时间也是下个节目的开始时间
+            executor.schedule(this::stopRecording,endDelay,TimeUnit.MILLISECONDS);
+
+            //如果节目的结束时间是23:59:00，设定到23:59:10关闭这个单线程池
+            if("23:59".equals(programBean.getEndtime())){
+                long shutDownDelay = DateUtil.timeDiff("00:00:00","23:59:10");
+                executor.schedule(this::shutDown,shutDownDelay,TimeUnit.MILLISECONDS);
+            }
+        }
+
+
+        /*ProgramBean bean = programs.get(0);
         String time = bean.getStarttime();
         //每天第一个节目，如果不是00：00开始，计算它的开始时间距离0点有多少毫秒，线程开始休眠，等节目开始再执行下一步
         if(!"00:00".equals(time) && bean.isWillSplit()){
@@ -106,7 +136,7 @@ public class RecorderRunnable implements Runnable {
             }
             //切片后（录制结束后），向节目单系统发送数据
             callBackService.sendData(properties, channel.getStreamName(), program);
-        }
+        }*/
     }
 
     /**
@@ -216,4 +246,28 @@ public class RecorderRunnable implements Runnable {
         String end = program.getEndtime().replace(":", "");
         return streamName+"_"+DateUtil.getDate("yyyyMMdd")+"_"+start+"_"+end;
     }
+
+    /**
+     * 找出需要录制的节目
+     */
+    private boolean willSplit(ProgramBean programBean){
+        return programBean.isWillSplit();
+    }
+
+    /**
+     * 关闭线程池
+     */
+    private void shutDown(){
+        executor.shutdown();
+        executor.shutdownNow();
+        log.info("shutDown ScheduledThreadPoolExecutor");
+    }
+    /**
+     * 每个节目的开始时间需要执行的开始命令
+     */
+
+    /**
+     * 每个节目结束时间需要执行的结束命令
+     */
+
 }
