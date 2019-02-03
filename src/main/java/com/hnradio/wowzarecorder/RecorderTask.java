@@ -26,6 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -46,8 +47,8 @@ public class RecorderTask {
 
     private ScheduledExecutorService service;
 
-//    @Scheduled(cron = "50 59 23 * * ?")
-    @Scheduled(cron = "00 52 15 * * ?")
+    @Scheduled(cron = "56 59 23 * * ?")
+//    @Scheduled(cron = "00 52 15 * * ?")
     public void RecorderExecutor(){
         try {
             //获取第二天的节目单json数据

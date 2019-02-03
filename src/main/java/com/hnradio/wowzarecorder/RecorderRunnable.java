@@ -37,10 +37,14 @@ public class RecorderRunnable implements Runnable {
 
     private String passWord;
 
-    //url前缀
+    /**
+     *  url前缀
+     */
     private String urlPrefix;
 
-    //存储目录
+    /**
+     * 存储目录
+     */
     private String directory;
 
     RecorderRunnable(ChannelBean channel, RecorderProperties properties, CallBackService callBackService) {
@@ -59,6 +63,7 @@ public class RecorderRunnable implements Runnable {
         //获取此频率下所有节目
         List<ProgramBean> programs = channel.getPrograms();
         ExecutorService executorService = Executors.newSingleThreadExecutor();
+//        ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
         //创建当天目录
         directory = createDirectories();
         ProgramBean bean = programs.get(0);
@@ -134,7 +139,7 @@ public class RecorderRunnable implements Runnable {
         this.stopRecording();
         //开始命令
         this.startRecording(program);
-        log.info("先暂停再开始录制新节目：{}",program.getName());
+        log.info("切片完毕，开始录制新节目：{}",program.getName());
     }
 
     /**
@@ -181,7 +186,6 @@ public class RecorderRunnable implements Runnable {
             process.waitFor();  //执行完才能继续下一步，输出路径
         } catch (IOException | InterruptedException e) {
             log.error("ffmpeg出错了：{}",e);
-//            throw new Exception();
         }
         return outputPath;
     }
