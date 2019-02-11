@@ -40,7 +40,7 @@ public class OkHttpUtil {
         try {
             response = client.newCall(request).execute();
         } catch (IOException e) {
-            log.error("okHttp调用失败：{}",e);
+            log.error("okHttp调用失败：{}",url,e);
         }finally {
             if(response != null) {
                 response.body().close();
