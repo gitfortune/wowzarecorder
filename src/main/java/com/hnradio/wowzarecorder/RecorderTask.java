@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -48,8 +49,7 @@ public class RecorderTask {
     private ScheduledExecutorService service;
 
     @Scheduled(cron = "56 59 23 * * ?")
-//    @Scheduled(cron = "00 52 15 * * ?")
-    public void RecorderExecutor(){
+    public void recorderExecutor(){
         try {
             //获取第二天的节目单json数据
             String sync = OkHttpUtil.getSync("http://program.hndt.com/get/vodset");
@@ -75,7 +75,6 @@ public class RecorderTask {
      * 启动线程，开始执行录制任务
      */
     public void startUp(){
-//        service.execute(new RecorderRunnable(channelList.get(37)));
         for(ChannelBean channel : channelList){
             service.execute(new RecorderRunnable(channel,properties,callBackService));
         }
@@ -85,23 +84,8 @@ public class RecorderTask {
      * 每天晚上定时关闭线程池
      */
     @Scheduled(cron = "56 57 23 * * ?")
-//    @Scheduled(cron = "00 35 15 * * ?")
     public void shutDownThreadPool(){
-        /*String urlPrefix = properties.getUrlPrefix();
-        String userName = properties.getUserName();
-        String passWord = properties.getPassWord();*/
         log.info("即将关闭线程池");
-        //先发出停止录制命令
-        /*for(ChannelBean channel : channelList){
-            String stopCommand = urlPrefix+"/livestreamrecord?app=live&streamname="+channel.getStreamName()+"&action=stopRecording&format=2&option=append";
-            OkHttpUtil.digest(userName, passWord, stopCommand);
-
-            //找出每个频率的最后一个节目
-            ProgramBean program = channel.getPrograms().get(channel.getPrograms().size()-1);
-            //向节目单系统发送数据
-            callBackService.sendData(properties,channel.getStreamName(),program);
-            log.info("最后一次发停止命令"+program.getName());
-        }*/
         service.shutdown();
         try {
             //等待5秒
@@ -129,8 +113,16 @@ public class RecorderTask {
     private void saveProgramGuides(String content){
         FileOutputStream outputStream = null;
         FileChannel channel = null;
-        //明天的日期
-        String yyyyMMdd = LocalDate.now().plusDays(1).format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String yyyyMMdd;
+        //请求节目单的数据有时在00：00之前就已经获取到，有时在00：00之后才获取到，所以根据时间做不同的处理
+        //如果已经过0点，新文件名是当天日期
+        if(LocalTime.now().getHour() == 00){
+            yyyyMMdd = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        }else {
+            //否则，是第二天日期
+            yyyyMMdd = LocalDate.now().plusDays(1).format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        }
+
         try {
             Path path = Paths.get(properties.getProgramGuides());
             //如果文件目录不存在

@@ -67,7 +67,6 @@ public class RecorderRunnable implements Runnable {
         log.info("线程开始执行");
         //获取此频率下所有节目
         List<ProgramBean> programs = channel.getPrograms();
-//        ExecutorService executorService = Executors.newSingleThreadExecutor();
 
         executor = new ScheduledThreadPoolExecutor(1);
         //创建当天目录
@@ -83,60 +82,21 @@ public class RecorderRunnable implements Runnable {
             executor.schedule(()->startRecording(programBean),startDelay,TimeUnit.MILLISECONDS);
 
             //计算节目的结束时间距离0点有多少毫秒，然后提前一秒
-            LocalTime localTime = LocalTime.parse(programBean.getEndtime()).minusSeconds(1L);
-            long endDelay = DateUtil.timeDiff("00:00:00", localTime.toString());
-            //要提前一秒结束录制，避免和下一个开始时间冲突，有些时间是上个节目的结束时间也是下个节目的开始时间
+            LocalTime minusTime = LocalTime.parse(programBean.getEndtime()).minusSeconds(1L);
+            long endDelay = DateUtil.timeDiff("00:00:00", minusTime.toString());
+            //要提前一秒结束录制，避免和下一个开始时间冲突，上个节目的结束时间也是下个节目的开始时间
             executor.schedule(this::stopRecording,endDelay,TimeUnit.MILLISECONDS);
 
-            //如果节目的结束时间是23:59:00，设定到23:59:10关闭这个单线程池
+            //切片后（录制结束后），向节目单系统发送数据
+            long pushTime = DateUtil.timeDiff("00:00:00", programBean.getEndtime());
+            executor.schedule(() -> callBackService.pushData(properties, streamName, programBean), pushTime, TimeUnit.MILLISECONDS);
+
+            //如果节目的结束时间是23:59:00，设定到23:59:50关闭这个单线程池
             if("23:59".equals(programBean.getEndtime())){
-                long shutDownDelay = DateUtil.timeDiff("00:00:00","23:59:10");
+                long shutDownDelay = DateUtil.timeDiff("00:00:00","23:59:50");
                 executor.schedule(this::shutDown,shutDownDelay,TimeUnit.MILLISECONDS);
             }
         }
-
-
-        /*ProgramBean bean = programs.get(0);
-        String time = bean.getStarttime();
-        //每天第一个节目，如果不是00：00开始，计算它的开始时间距离0点有多少毫秒，线程开始休眠，等节目开始再执行下一步
-        if(!"00:00".equals(time) && bean.isWillSplit()){
-            try {
-                log.info(streamName+":"+"节目还没开始，等待录制,"+bean.getName());
-                Thread.sleep(DateUtil.timeDiff("00:00", time));
-            } catch (InterruptedException e) {
-                log.error("等待节目开始的线程休眠被中断：{}",e);
-            }
-        }
-
-        //循环当前频率下的节目，按照顺序进行录制
-        for(ProgramBean program : programs){
-            //如果这个节目不需要录制
-            if(!program.isWillSplit()){
-                //不管之前有没有在录制，先发出停止录制命令
-                this.stopRecording();
-                log.info(streamName+":"+program.getName()+"不录制");
-                try {
-                    //根据这个节目时长休眠
-                    Thread.sleep(DateUtil.timeDiff(program.getStarttime(), program.getEndtime()));
-//                    Thread.sleep(30000);
-                } catch (InterruptedException e) {
-                    log.error("非录制节目休眠时线程被中断：{}",e);
-                }
-                continue;
-            }
-            //执行切片命令
-            executorService.execute(() -> splitStream(program));
-            //计算该节目时长
-            long timeDiff = DateUtil.timeDiff(program.getStarttime(), program.getEndtime());
-            try {
-                //休眠一个节目时长
-                Thread.sleep(timeDiff);
-            } catch (InterruptedException e) {
-                log.error("等待录制结束的线程休眠被中断：{}",e);
-            }
-            //切片后（录制结束后），向节目单系统发送数据
-            callBackService.sendData(properties, channel.getStreamName(), program);
-        }*/
     }
 
     /**
@@ -158,18 +118,6 @@ public class RecorderRunnable implements Runnable {
         //停止命令
         String stopCommand = urlPrefix+"/livestreamrecord?app=live&streamname="+streamName+"&action=stopRecording&format=2&option=append";
         OkHttpUtil.digest(userName, passWord, stopCommand);
-    }
-
-    /**
-     * 切片，分割直播流，向wowza发送先停止再开始的命令
-     */
-    private void splitStream(ProgramBean program) {
-
-        //停止命令
-        this.stopRecording();
-        //开始命令
-        this.startRecording(program);
-        log.info("切片完毕，开始录制新节目：{}",program.getName());
     }
 
     /**
@@ -262,12 +210,5 @@ public class RecorderRunnable implements Runnable {
         executor.shutdownNow();
         log.info("shutDown ScheduledThreadPoolExecutor");
     }
-    /**
-     * 每个节目的开始时间需要执行的开始命令
-     */
-
-    /**
-     * 每个节目结束时间需要执行的结束命令
-     */
 
 }
