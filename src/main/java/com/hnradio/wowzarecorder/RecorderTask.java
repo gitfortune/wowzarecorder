@@ -67,7 +67,7 @@ public class RecorderTask {
             service = Executors.newScheduledThreadPool(channelList.size());
             startUp();
         } catch (IOException e) {
-            log.error("请求节目单出错：{}",e);
+            log.error("请求节目单出错",e);
         }
     }
 
@@ -93,7 +93,7 @@ public class RecorderTask {
                 service.shutdownNow();
             }
         } catch (InterruptedException e) {
-            log.error("等待终止线程超时：{}",e);
+            log.error("等待终止线程超时",e);
         }finally {
             service.shutdownNow();
         }
@@ -145,20 +145,20 @@ public class RecorderTask {
             buffer.clear();
             channel.write(buffer);
         } catch (IOException e) {
-            log.error("保存节目单失败：{}",e);
+            log.error("保存节目单失败：{}",yyyyMMdd,e);
         } finally {
             if(channel != null){
                 try {
                     channel.close();
                 } catch (IOException e) {
-                    log.error("关闭FileChannel失败：{}",e);
+                    log.error("关闭FileChannel失败",e);
                 }
             }
             if(outputStream != null){
                 try {
                     outputStream.close();
                 } catch (IOException e) {
-                    log.error("关闭FileOutputStream失败：{}",e);
+                    log.error("关闭FileOutputStream失败",e);
                 }
             }
 

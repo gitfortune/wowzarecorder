@@ -241,6 +241,14 @@ public class RecorderTaskTest {
             log.info("");
         }
 
+        ProgramBean programBean = new ProgramBean();
+
+        try {
+            System.out.println(programBean.getName().substring(5));
+        } catch (Exception e) {
+            log.error("出错了：{}",startParse.toString(),e);
+        }
+
     }
 
 }

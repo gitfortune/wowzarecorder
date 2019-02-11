@@ -163,7 +163,7 @@ public class RecorderRunnable implements Runnable {
             Process process = builder.start();
             process.waitFor();  //执行完才能继续下一步，输出路径
         } catch (IOException | InterruptedException e) {
-            log.error("ffmpeg出错了：{}",e);
+            log.error("ffmpeg出错了",e);
         }
         return outputPath;
     }
