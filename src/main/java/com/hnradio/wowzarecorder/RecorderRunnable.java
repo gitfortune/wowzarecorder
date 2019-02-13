@@ -130,8 +130,7 @@ public class RecorderRunnable implements Runnable {
      * 创建文件夹
      */
     private String createDirectories(){
-//        String filePath = properties.getStorage()+"/"+streamName+"/"+DateUtil.getDate("yyyyMMdd");
-        String filePath = properties.getStorage()+"/"+streamName+"/"+"20190214";
+        String filePath = properties.getStorage()+"/"+streamName+"/"+DateUtil.getDate("yyyyMMdd");
         Path path = Paths.get(filePath);
         //如果文件目录不存在
         if(!Files.exists(path)){
