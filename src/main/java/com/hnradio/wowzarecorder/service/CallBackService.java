@@ -32,6 +32,6 @@ public class CallBackService {
         program.setCreateDate(DateUtil.getDate("yyyy-MM-dd"));
         String json = new Gson().toJson(program);
 //        serviceAPI.create(json);
-        log.info("数据已发出"+json);
+//        log.info("数据已发出"+json);
     }
 }

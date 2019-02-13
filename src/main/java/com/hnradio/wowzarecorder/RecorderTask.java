@@ -3,7 +3,6 @@ package com.hnradio.wowzarecorder;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.hnradio.wowzarecorder.bean.ChannelBean;
-import com.hnradio.wowzarecorder.bean.ProgramBean;
 import com.hnradio.wowzarecorder.config.RecorderProperties;
 import com.hnradio.wowzarecorder.service.CallBackService;
 import com.hnradio.wowzarecorder.utils.OkHttpUtil;
@@ -27,12 +26,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
 /**
- * 切片（录制）任务
+ * @Auther: zhenghao
+ * @Date: 2019/1/29
+ * @Description: 切片（录制）任务
  */
 @Component
 @Slf4j
@@ -74,7 +73,7 @@ public class RecorderTask {
     /**
      * 启动线程，开始执行录制任务
      */
-    public void startUp(){
+    private void startUp(){
         for(ChannelBean channel : channelList){
             service.execute(new RecorderRunnable(channel,properties,callBackService));
         }
@@ -85,17 +84,19 @@ public class RecorderTask {
      */
     @Scheduled(cron = "56 57 23 * * ?")
     public void shutDownThreadPool(){
-        log.info("即将关闭线程池");
-        service.shutdown();
-        try {
-            //等待5秒
-            if(!service.awaitTermination(5, TimeUnit.SECONDS)){
+        if(service != null){
+            log.info("即将关闭线程池");
+            service.shutdown();
+            try {
+                //等待5秒
+                if(!service.awaitTermination(5, TimeUnit.SECONDS)){
+                    service.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                log.error("等待终止线程超时",e);
+            }finally {
                 service.shutdownNow();
             }
-        } catch (InterruptedException e) {
-            log.error("等待终止线程超时",e);
-        }finally {
-            service.shutdownNow();
         }
         log.info("关闭线程池");
     }
@@ -114,8 +115,10 @@ public class RecorderTask {
         FileOutputStream outputStream = null;
         FileChannel channel = null;
         String yyyyMMdd;
-        //请求节目单的数据有时在00：00之前就已经获取到，有时在00：00之后才获取到，所以根据时间做不同的处理
-        //如果已经过0点，新文件名是当天日期
+        /*
+        请求节目单的数据有时在00：00之前就已经获取到，有时在00：00之后才获取到，所以根据时间做不同的处理
+        如果已经过0点，新文件名是当天日期
+        */
         if(LocalTime.now().getHour() == 00){
             yyyyMMdd = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         }else {

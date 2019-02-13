@@ -7,7 +7,7 @@ import com.hnradio.wowzarecorder.service.CallBackService;
 import com.hnradio.wowzarecorder.utils.DateUtil;
 import com.hnradio.wowzarecorder.utils.OkHttpUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.CollectionUtils;
+import okhttp3.Response;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,7 +23,9 @@ import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 /**
- * 单个频率的录制线程
+ * @Auther: zhenghao
+ * @Date: 2019/1/29
+ * @Description: 单个频率的录制线程
  */
 @Slf4j
 public class RecorderRunnable implements Runnable {
@@ -65,6 +67,10 @@ public class RecorderRunnable implements Runnable {
     @Override
     public void run() {
         log.info("线程开始执行");
+        /* 避免了当重新部署时，每天第一个节目录制不上的问题。终止程序后，很多频率处于startRecording状态，
+         * 当新代码重新部署好，第一次运行的start命令将不起作用，所以要先stopRecording，再开始新的录制
+         */
+        this.stopRecording();
         //获取此频率下所有节目
         List<ProgramBean> programs = channel.getPrograms();
 
@@ -107,8 +113,8 @@ public class RecorderRunnable implements Runnable {
         String fileName = this.getFileName(program);
         String url = urlPrefix+"/livestreamrecord?app=live&streamname="+streamName +"&action=startRecording&option=append&format=2&outputPath="+directory
                 + "&outputFile="+fileName+".mp4";
-        OkHttpUtil.digest(userName, passWord, url);
-        log.info("当前录制节目名称为：{}",fileName);
+        Response digest = OkHttpUtil.digest(userName, passWord, url);
+        log.info("当前录制节目名称为：{}，{}",fileName,digest.toString());
     }
 
     /**
@@ -124,7 +130,8 @@ public class RecorderRunnable implements Runnable {
      * 创建文件夹
      */
     private String createDirectories(){
-        String filePath = properties.getStorage()+"/"+streamName+"/"+DateUtil.getDate("yyyyMMdd");
+//        String filePath = properties.getStorage()+"/"+streamName+"/"+DateUtil.getDate("yyyyMMdd");
+        String filePath = properties.getStorage()+"/"+streamName+"/"+"20190214";
         Path path = Paths.get(filePath);
         //如果文件目录不存在
         if(!Files.exists(path)){
