@@ -43,4 +43,8 @@ public class RecorderProperties {
      * 保存节目单的路径
      */
     public String programGuides;
+    /**
+     * 节目单的域名
+     */
+    public String guidesDomainName;
 }

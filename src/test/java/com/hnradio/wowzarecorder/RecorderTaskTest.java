@@ -30,6 +30,7 @@ import java.security.PublicKey;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -249,6 +250,28 @@ public class RecorderTaskTest {
             log.error("出错了：{}",startParse.toString(),e);
         }
 
+    }
+
+    @Test
+    public void test12() throws IOException {
+        Map map = new HashMap();
+        map.put("id","9205");
+        map.put("signa","NF8xNTUxOTk5NjAwXzE1NTIwMDE0MDA@`5^1@");
+        map.put("file","/qqe2.com/jsonview/index/20190313.m4a");
+
+        String json = new Gson().toJson(map);
+        OkHttpClient okHttpClient = new OkHttpClient();
+        MediaType mediaType = MediaType.parse("application/json");
+        RequestBody body = RequestBody.create(mediaType, json);
+        Request request = new Request.Builder().url("http://program1.hndt.com/api/vodpost/").post(body)
+                .addHeader("content-type", "application/json").build();
+
+        Response response = okHttpClient.newCall(request).execute();
+        if (!response.isSuccessful()) {
+            throw new IOException("Unexpected code " + response);
+        }else {
+            log.info(response.body().source().readUtf8());
+        }
     }
 
 }

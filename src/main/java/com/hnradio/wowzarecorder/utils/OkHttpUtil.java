@@ -5,6 +5,7 @@ import com.burgstaller.okhttp.CachingAuthenticatorDecorator;
 import com.burgstaller.okhttp.digest.CachingAuthenticator;
 import com.burgstaller.okhttp.digest.Credentials;
 import com.burgstaller.okhttp.digest.DigestAuthenticator;
+import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 
@@ -102,110 +103,29 @@ public class OkHttpUtil {
     }
 
     /**
-     * 同步的Post请求
-     *
-     * @param url    url
-     * @param params params
-     * @return responseStr
-     * @throws IOException
+     * 发送json参数的post请求
      */
-    public static String postSync(String url, Map<String, String> params)
-            throws IOException {
-        // RequestBody
-        RequestBody requestBody;
-        if (params == null) {
-            params = new HashMap<>();
-        }
-        // 创建OKHttpClient对象
+    public static String post(String url,String json){
+
         OkHttpClient okHttpClient = new OkHttpClient();
-        FormBody.Builder builder = new FormBody.Builder();
-        /**
-         * 在这对添加的参数进行遍历
-         */
-        for (Map.Entry<String, String> map : params.entrySet()) {
-            String key = map.getKey();
-            String value;
-            /**
-             * 判断值是否是空的
-             */
-            if (map.getValue() == null) {
-                value = "";
-            } else {
-                value = map.getValue();
+        MediaType mediaType = MediaType.parse("application/json");
+        RequestBody body = RequestBody.create(mediaType, json);
+        Request request = new Request.Builder().url(url).post(body)
+                .addHeader("content-type", "application/json").build();
+
+        String res = null;
+        try {
+            Response response = okHttpClient.newCall(request).execute();
+            if (!response.isSuccessful()) {
+                log.error("Okhttp发送post请求没成功");
             }
-            /**
-             * 把key和value添加到formBody中
-             */
-            builder.add(key, value);
+            res = response.body().source().readUtf8();
+        } catch (IOException e) {
+            log.error("Okhttp发送post请求出错",e);
         }
-        requestBody = builder.build();
-        // 创建一个Request
-        final Request request = new Request.Builder()
-                .url(url)
-                .post(requestBody)
-                .build();
-        Call call = okHttpClient.newCall(request);
-        // 返回值为response
-        Response response = call.execute();
-        // 将response转化成String
-        String responseStr = response.body().string();
-        return responseStr;
+        return res;
     }
+
+
     //原文：https://blog.csdn.net/qq_16240393/article/details/54863646
-
-    /**
-     * 异步的Post请求
-     *
-     * @param url    url
-     * @param params params
-     * @return responseStr
-     */
-    public static void postAsyn(String url, Map<String, String> params) {
-        // RequestBody
-        RequestBody requestBody;
-        if (params == null) {
-            params = new HashMap<>();
-        }
-        // 创建OKHttpClient对象
-        OkHttpClient okHttpClient = new OkHttpClient();
-        FormBody.Builder builder = new FormBody.Builder();
-        /**
-         * 在这对添加的参数进行遍历
-         */
-        for (Map.Entry<String, String> map : params.entrySet()) {
-            String key = map.getKey();
-            String value;
-            /**
-             * 判断值是否是空的
-             */
-            if (map.getValue() == null) {
-                value = "";
-            } else {
-                value = map.getValue();
-            }
-            /**
-             * 把key和value添加到formBody中
-             */
-            builder.add(key, value);
-        }
-        requestBody = builder.build();
-        // 创建一个Request
-        final Request request = new Request.Builder()
-                .url(url)
-                .post(requestBody)
-                .build();
-        Call call = okHttpClient.newCall(request);
-        call.enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                // 将response转化成String
-                String responseStr = response.body().string();
-            }
-        });
-    }
 }

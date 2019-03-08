@@ -47,18 +47,19 @@ public class RecorderTask {
 
     private ScheduledExecutorService service;
 
-    @Scheduled(cron = "56 59 23 * * ?")
+//    @Scheduled(cron = "56 59 23 * * ?")
+    @Scheduled(cron = "00 59 11 * * ?")
     public void recorderExecutor(){
         try {
             //获取第二天的节目单json数据
-            String sync = OkHttpUtil.getSync("http://program.hndt.com/get/vodset");
+            String sync = OkHttpUtil.getSync(properties.getGuidesDomainName()+"get/vodset");
             //保存节目单
             saveProgramGuides(sync);
 
             List<ChannelBean> channels = new Gson().fromJson(sync,new TypeToken<List<ChannelBean>>() {
             }.getType());
 
-            //过滤出需要切片的频率
+            //拿到需要切片的频率
             channelList = channels.stream().filter(this::willSplit).collect(Collectors.toList());
             log.info("需要录制的频率数：{}",channelList.size());
 

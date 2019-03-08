@@ -5,9 +5,13 @@ import com.hnradio.wowzarecorder.api.PushDataServiceAPI;
 import com.hnradio.wowzarecorder.bean.ProgramBean;
 import com.hnradio.wowzarecorder.config.RecorderProperties;
 import com.hnradio.wowzarecorder.utils.DateUtil;
+import com.hnradio.wowzarecorder.utils.OkHttpUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -26,12 +30,19 @@ public class CallBackService {
         String start = program.getStarttime().replace(":", "");
         String end = program.getEndtime().replace(":", "");
         String filePath = properties.getStorage()+"/"+streamName+"/"+ DateUtil.getDate("yyyyMMdd");
-        String fileName = streamName+"_"+DateUtil.getDate("yyyyMMdd")+"_"+start+"_"+end;
+        String fileName = streamName+"_"+DateUtil.getDate("yyyyMMdd")+"_"+start+"_"+end+".mp4";
 
-        program.setFilePath(filePath+"/"+fileName);
-        program.setCreateDate(DateUtil.getDate("yyyy-MM-dd"));
-        String json = new Gson().toJson(program);
+//        program.setFilePath(filePath+"/"+fileName);
+//        program.setCreateDate(DateUtil.getDate("yyyy-MM-dd"));
+//        String json = new Gson().toJson(program);
+        //向新节目单发送它要保存的数据
 //        serviceAPI.create(json);
-//        log.info("数据已发出"+json);
+
+        //向老节目单发送它要保存的数据
+        Map<String,Object> map = new HashMap<>();
+        map.put("id",program.getId());
+        map.put("signa",program.getSigna());
+        map.put("file",filePath+"/"+fileName);
+        OkHttpUtil.post(properties.getGuidesDomainName()+"api/vodpost/",new Gson().toJson(map));
     }
 }

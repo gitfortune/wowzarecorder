@@ -1,10 +1,10 @@
 spring:
   application:
-    name: wowzarecorder
+    name: wowza-recorder
   profiles:
     active: pro
 server:
-  port: 8080
+  port: 55319
 
 eureka:
   instance:
