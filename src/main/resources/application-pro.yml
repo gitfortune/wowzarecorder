@@ -1,9 +1,9 @@
 
 #wowza录制，切片
 recorder:
-  programGuides: /usr/local/WowzaStreamingEngine-4.7.0/content/radio/test/programGuides
-  storage: /usr/local/WowzaStreamingEngine-4.7.0/content/radio/test  # 录制文件存储目录
+  programGuides: /usr/local/WowzaStreamingEngine-4.7.0/content/radio/test/programGuides #储存节目单json文件的目录
+  storage: /usr/local/WowzaStreamingEngine-4.7.0/content/radio/test  # 录制文件mp4存储目录
   urlPrefix:  http://172.20.2.1:8086 #wowza录制直播流的ip和端口   http://www.ttstream.com/wowza/record#livestreamrecordhttpprovider
   userName: zhenghao  #对通过Http接口控制录制任务做认证 的 用户名   http://www.ttstream.com/wowza/record#authentication
   passWord: hndtib21  #对通过Http接口控制录制任务做认证 的 密码    http://www.ttstream.com/wowza/record#authentication
-  guidesDomainName: http://program1.hndt.com/
+  guidesDomainName: http://program1.hndt.com/ # 节目单域名

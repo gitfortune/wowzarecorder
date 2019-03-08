@@ -106,7 +106,7 @@ public class OkHttpUtil {
      * 发送json参数的post请求
      */
     public static String post(String url,String json){
-
+        log.info("发送的json"+json);
         OkHttpClient okHttpClient = new OkHttpClient();
         MediaType mediaType = MediaType.parse("application/json");
         RequestBody body = RequestBody.create(mediaType, json);

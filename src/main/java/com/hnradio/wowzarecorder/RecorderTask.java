@@ -47,8 +47,7 @@ public class RecorderTask {
 
     private ScheduledExecutorService service;
 
-//    @Scheduled(cron = "56 59 23 * * ?")
-    @Scheduled(cron = "00 59 11 * * ?")
+    @Scheduled(cron = "56 59 23 * * ?")
     public void recorderExecutor(){
         try {
             //获取第二天的节目单json数据
