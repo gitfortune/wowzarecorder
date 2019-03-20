@@ -130,7 +130,21 @@ public class RecorderRunnable implements Runnable {
      * 创建文件夹
      */
     private String createDirectories(){
-        String filePath = properties.getStorage()+"/"+streamName+"/"+DateUtil.getDate("yyyyMMdd");
+        /*
+        有时在00：00之前就执行此方法，有时在00：00之后才执行，所以根据时间做不同的处理
+        如果已经过0点，新文件名是当天日期。这个方法每天只会执行一次
+        */
+
+        String yyyyMMdd;
+        if(LocalTime.now().getHour() == 00){
+            yyyyMMdd = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+
+        }else {
+            //否则，新文件夹名是第二天日期
+            yyyyMMdd = LocalDate.now().plusDays(1).format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        }
+
+        String filePath = properties.getStorage()+"/"+streamName+"/"+yyyyMMdd;
         Path path = Paths.get(filePath);
         //如果文件目录不存在
         if(!Files.exists(path)){
@@ -141,6 +155,7 @@ public class RecorderRunnable implements Runnable {
                 log.error("文件夹创建失败",e);
             }
         }
+        log.info("已创建存放mp3的文件夹");
         return filePath;
     }
 

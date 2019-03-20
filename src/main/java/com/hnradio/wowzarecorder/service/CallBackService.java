@@ -32,17 +32,17 @@ public class CallBackService {
         String filePath = properties.getStorage()+"/"+streamName+"/"+ DateUtil.getDate("yyyyMMdd");
         String fileName = streamName+"_"+DateUtil.getDate("yyyyMMdd")+"_"+start+"_"+end+".mp4";
 
-//        program.setFilePath(filePath+"/"+fileName);
-//        program.setCreateDate(DateUtil.getDate("yyyy-MM-dd"));
-//        String json = new Gson().toJson(program);
+        program.setFilePath(filePath+"/"+fileName);
+        program.setCreateDate(DateUtil.getDate("yyyy-MM-dd"));
+        String json = new Gson().toJson(program);
         //向新节目单发送它要保存的数据
 //        serviceAPI.create(json);
-
+        log.info("发送数据{}",program.getFilePath());
         //向老节目单发送它要保存的数据
-        Map<String,Object> map = new HashMap<>();
+        /*Map<String,Object> map = new HashMap<>();
         map.put("id",program.getId());
         map.put("signa",program.getSigna());
         map.put("file",filePath+"/"+fileName);
-        OkHttpUtil.post(properties.getGuidesDomainName()+"api/vodpost/",new Gson().toJson(map));
+        OkHttpUtil.post(properties.getGuidesDomainName()+"api/vodpost/",new Gson().toJson(map));*/
     }
 }

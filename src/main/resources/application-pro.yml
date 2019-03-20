@@ -6,4 +6,4 @@ recorder:
   urlPrefix:  http://172.20.2.1:8086 #wowza录制直播流的ip和端口   http://www.ttstream.com/wowza/record#livestreamrecordhttpprovider
   userName: zhenghao  #对通过Http接口控制录制任务做认证 的 用户名   http://www.ttstream.com/wowza/record#authentication
   passWord: hndtib21  #对通过Http接口控制录制任务做认证 的 密码    http://www.ttstream.com/wowza/record#authentication
-  guidesDomainName: http://program1.hndt.com/ # 节目单域名
+  guidesDomainName: http://program.hndt.com/ # 节目单域名

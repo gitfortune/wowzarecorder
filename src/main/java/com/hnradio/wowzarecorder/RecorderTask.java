@@ -47,7 +47,7 @@ public class RecorderTask {
 
     private ScheduledExecutorService service;
 
-    @Scheduled(cron = "56 59 23 * * ?")
+    @Scheduled(cron = "57 59 23 * * ?")
     public void recorderExecutor(){
         try {
             //获取第二天的节目单json数据
@@ -122,7 +122,7 @@ public class RecorderTask {
         if(LocalTime.now().getHour() == 00){
             yyyyMMdd = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         }else {
-            //否则，是第二天日期
+            //否则，新文件名是第二天日期
             yyyyMMdd = LocalDate.now().plusDays(1).format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         }
 
