@@ -3,15 +3,12 @@ package com.hnradio.wowzarecorder.service;
 import com.google.gson.Gson;
 import com.hnradio.wowzarecorder.api.PushDataServiceAPI;
 import com.hnradio.wowzarecorder.bean.ProgramBean;
+import com.hnradio.wowzarecorder.common.RestResponse;
 import com.hnradio.wowzarecorder.config.RecorderProperties;
 import com.hnradio.wowzarecorder.utils.DateUtil;
-import com.hnradio.wowzarecorder.utils.OkHttpUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 @Slf4j
@@ -36,13 +33,11 @@ public class CallBackService {
         program.setCreateDate(DateUtil.getDate("yyyy-MM-dd"));
         String json = new Gson().toJson(program);
         //向新节目单发送它要保存的数据
-//        serviceAPI.create(json);
+        RestResponse response = serviceAPI.create(json);
+        if(response != null){
+            log.info("调用pushData的返回信息",response.toString());
+        }
         log.info("发送数据{}",program.getFilePath());
-        //向老节目单发送它要保存的数据
-        /*Map<String,Object> map = new HashMap<>();
-        map.put("id",program.getId());
-        map.put("signa",program.getSigna());
-        map.put("file",filePath+"/"+fileName);
-        OkHttpUtil.post(properties.getGuidesDomainName()+"api/vodpost/",new Gson().toJson(map));*/
+        
     }
 }

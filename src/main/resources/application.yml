@@ -6,20 +6,6 @@ spring:
 server:
   port: 55319
 
-eureka:
-  instance:
-    preferIpAddress: true
-    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${spring.application.instance_id:${server.port}}
-    lease-renewal-interval-in-seconds: 5    # 续约更新时间间隔（默认30秒）
-    lease-expiration-duration-in-seconds: 10 # 续约到期时间（默认90秒）
-  client:
-    serviceUrl:
-      defaultZone:  http://localhost:53000/eureka/
-#      defaultZone:  http://172.20.5.4:53000/eureka/
-    registry-fetch-interval-seconds: 5 # 抓取服务列表
-    register-with-eureka: true   #是否将自己注册到Eureka Server上，默认为true
-    fetch-registry: true   #是否从Eureka Server上获取注册信息，默认为true
-
 endpoints:
   health:
     sensitive: false
@@ -56,3 +42,6 @@ management:
     web:
       exposure:
         include: refresh,health,info,env
+
+logging:
+  config: classpath:log4j2-dev.xml

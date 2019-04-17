@@ -111,7 +111,7 @@ public class RecorderRunnable implements Runnable {
     private void startRecording(ProgramBean program){
 
         String fileName = this.getFileName(program);
-        String url = urlPrefix+"/livestreamrecord?app=live&streamname="+streamName +"&action=startRecording&option=append&format=2&outputPath="+directory
+        String url = urlPrefix+"/livestreamrecord?app="+channel.getApp()+"&streamname="+streamName +"&action=startRecording&option=append&format=2&outputPath="+directory
                 + "&outputFile="+fileName+".mp4";
         Response digest = OkHttpUtil.digest(userName, passWord, url);
         log.info("当前录制节目名称为：{}，{}",fileName,digest.toString());
@@ -122,7 +122,7 @@ public class RecorderRunnable implements Runnable {
      */
     private void stopRecording(){
         //停止命令
-        String stopCommand = urlPrefix+"/livestreamrecord?app=live&streamname="+streamName+"&action=stopRecording&format=2&option=append";
+        String stopCommand = urlPrefix+"/livestreamrecord?app="+channel.getApp()+"&streamname="+streamName+"&action=stopRecording&format=2&option=append";
         OkHttpUtil.digest(userName, passWord, stopCommand);
     }
 

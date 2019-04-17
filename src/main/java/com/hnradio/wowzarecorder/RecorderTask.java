@@ -51,7 +51,7 @@ public class RecorderTask {
     public void recorderExecutor(){
         try {
             //获取第二天的节目单json数据
-            String sync = OkHttpUtil.getSync(properties.getGuidesDomainName()+"get/vodset");
+            String sync = OkHttpUtil.getSync(properties.getGuidesDomainName()+"program/get/vodset");
             //保存节目单
             saveProgramGuides(sync);
 

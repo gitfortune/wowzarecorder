@@ -5,8 +5,7 @@ import lombok.Getter;
 @Getter
 public enum ResultEnmu {
 
-    SLEEP_FAIL(1,"休眠线程被中断"),
-    HAINA_FAIL(2,""),
+    SLEEP_FAIL(1,"休眠线程被中断")
     ;
 
 

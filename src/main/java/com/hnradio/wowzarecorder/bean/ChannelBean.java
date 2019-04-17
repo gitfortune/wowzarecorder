@@ -24,4 +24,9 @@ public class ChannelBean implements Serializable {
 
     private List<ProgramBean> programs; //包含的节目信息
 
+    /**
+     * 指明当前节目的流是在wowoza的哪个Applications下
+     */
+    private String app;
+
 }
